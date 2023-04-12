@@ -85,7 +85,7 @@ while repeat
     mo_pay: mo_pay.round(2),
     total_in: total_in.round(2)
   )
-  puts message
+  puts "=> #{message}"
 
   prompt("repeat", current_language)
   input = Kernel.gets().chomp().downcase()
