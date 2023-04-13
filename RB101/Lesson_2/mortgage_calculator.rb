@@ -1,96 +1,104 @@
 require 'yaml'
 MESSAGES = YAML.load_file('calculator_messages.yml')
+MON_IN_YEAR = 12
+PERCENTAGE = 100
 
-current_language = 'en'
+LANGUAGE = 'en'
+current_language = ''
 repeat = true
 
-def messages(message, lang=current_language)
-  MESSAGES[lang][message]
-end
-
-def prompt(key, current_language)
-  message = messages(key, current_language)
+def prompt(key, current_language = LANGUAGE)
+  message = MESSAGES[current_language][key]
   Kernel.puts("=> #{message}")
 end
 
 def valid?(number)
-  number.to_f.to_s == number || number.to_i.to_s == number
+  number.to_f > 0.0 &&
+    (number.to_f.to_s == number || number.to_i.to_s == number)
 end
 
-while repeat
-  language = ""
-  Kernel.puts("=> Choose language.\nType en: English, es: Spanish, ru: Russian")
-  language = Kernel.gets().chomp().downcase()
+def user_input(message, invalid_input, current_language,
+               zero_allowed = true)
+  while true
+    prompt(message, current_language)
+    input = Kernel.gets().chomp()
+    if (input.to_f == 0.0 && zero_allowed) || valid?(input)
+      break
+    end
+    prompt(invalid_input, current_language)
+  end
+  input
+end
 
-  if language == 'es'
+loop do
+  prompt('choose_language')
+  current_language = Kernel.gets().chomp().downcase()
+  case current_language
+  when 'en'
+    current_language = 'en'
+    break
+  when 'es'
     current_language = 'es'
-  elsif language == 'ru'
+    break
+  when 'ru'
     current_language = 'ru'
+    break
+  end
+  prompt('invalid_input', LANGUAGE)
+end
+
+system 'clear'
+
+prompt('welcome', current_language)
+
+while repeat
+  loan_amount = user_input(
+    "loan_amount", "invalid_input", current_language, false
+  ).to_f
+  apr = user_input(
+    "apr", "invalid_input", current_language
+  ).to_f
+  loan_dur_in_y = user_input(
+    "loan_dur_in_y", "invalid_input", current_language
+  ).to_i
+  # If loan_dur_in_y is 0 then loan_dur_in_mon has to be more than 0
+  check_duration = loan_dur_in_y != 0
+  loan_dur_in_mon = user_input(
+    "loan_dur_in_mon", "invalid_input",
+    current_language, check_duration
+  ).to_i
+
+  mon_int_rate = (apr / PERCENTAGE) / MON_IN_YEAR
+  loan_dur_in_month = loan_dur_in_y * MON_IN_YEAR + loan_dur_in_mon
+
+  if mon_int_rate == 0.0
+    mon_pay = loan_amount / loan_dur_in_month
+  else
+    mon_pay = loan_amount *
+              (mon_int_rate / (1 - (1 + mon_int_rate)**(-loan_dur_in_month)))
   end
 
-  loan_amount = ''
-  apr = ''
-  loan_dur_in_y = ''
-  loan_dur_in_m = ''
-
-  prompt('welcome', current_language)
-
-  loop do
-    prompt("loan_amount", current_language)
-    loan_amount = Kernel.gets().chomp()
-    if valid?(loan_amount)
-      break
-    end
-    prompt("valid_number", current_language)
-  end
-
-  loop do
-    prompt("apr", current_language)
-    apr = Kernel.gets().chomp()
-    if valid?(apr)
-      break
-    end
-    prompt("valid_number", current_language)
-  end
-
-  loop do
-    prompt("loan_dur_in_y", current_language)
-    loan_dur_in_y = Kernel.gets().chomp()
-    if valid?(loan_dur_in_y)
-      break
-    end
-    prompt("valid_number", current_language)
-  end
-
-  loop do
-    prompt("loan_dur_in_m", current_language)
-    loan_dur_in_m = Kernel.gets().chomp()
-    if valid?(loan_dur_in_m)
-      break
-    end
-    prompt("valid_number", current_language)
-  end
-
-  mo_in_r = (apr.to_f / 100) / 12
-  loan_dur_in_m = loan_dur_in_y.to_i * 12 + loan_dur_in_m.to_i
-  mo_pay = loan_amount.to_f * (mo_in_r / (1 - (1 + mo_in_r)**(-loan_dur_in_m)))
-  total_pay = loan_dur_in_m * mo_pay
-  total_in = total_pay - loan_amount.to_f
+  total_pay = loan_dur_in_month * mon_pay
+  total_int = total_pay - loan_amount
+  mon_int_rate_in_per = mon_int_rate * PERCENTAGE
 
   message = format(
     MESSAGES[current_language]["output"],
-    mo_in_r: mo_in_r,
-    loan_dur_in_m: loan_dur_in_m.round(2),
+    mon_int_rate: mon_int_rate_in_per,
+    loan_dur_in_mon: loan_dur_in_month.round(2),
     total_pay: total_pay.round(2),
-    mo_pay: mo_pay.round(2),
-    total_in: total_in.round(2)
+    mon_pay: mon_pay.round(2),
+    total_int: total_int.round(2)
   )
   puts "=> #{message}"
 
   prompt("repeat", current_language)
-  input = Kernel.gets().chomp().downcase()
+  # If input is embedded in double and/or single quotes
+  input = Kernel.gets().chomp().downcase().gsub(/[' "]/, '')
   if input == "exit"
     repeat = false
+  else
+    system 'clear'
   end
 end
 
