@@ -32,7 +32,7 @@ end
 
 def who_goes_first
   promt "Do you want to start first? Enter: Yes or No"
-  answer = gets.chomp.downcase.start_with?("y")
+  answer = gets.chomp.downcase().gsub(/[' "]/, '').start_with?("y")
   if answer
     return "Player"
   end
@@ -40,10 +40,10 @@ def who_goes_first
 end
 
 def choose_mode
-  promt "Choose difficulty level of the game. Enter: Easy or Beast"
-  answer = gets.chomp.downcase.start_with?("b")
+  promt "Choose difficulty level of the game. Enter: Easy or Hard"
+  answer = gets.chomp.downcase().gsub(/[' "]/, '').start_with?("h")
   if answer
-    return "Beast"
+    return "Hard"
   end
   "Easy"
 end
@@ -73,7 +73,7 @@ def empty_squares(brd)
   brd.keys.select { |num| brd[num] == INITIAL_MARKER }
 end
 
-# Beast mode
+# Hard mode
 def offense_defense(brd, size, winner_combinations)
   # Get the center index based on the board size
   center_index = get_center_index(size)
@@ -152,7 +152,7 @@ def places_piece!(brd, current_player, size,
     square = pick_square(availabe_number, brd)
     brd[square] = PLAYER_MARKER
   elsif current_player == "Computer"
-    if difficulty_level == "Beast"
+    if difficulty_level == "Hard"
       offense_defense(brd, size, winner_combinations)
     else
       square = empty_squares(brd).sample
@@ -315,7 +315,7 @@ end
 loop do
   start_game(scores)
   promt "Play again? (y or n)"
-  answer = gets.chomp.downcase.start_with?("y")
+  answer = gets.chomp.downcase().gsub(/[' "]/, '').start_with?("y")
   if answer == false
     break
   end
