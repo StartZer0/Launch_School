@@ -166,7 +166,7 @@ def get_move_from_prioritized_line(board, center_index,
     prioritized_line.find { |item| board[item].is_a?(Integer) }
   elsif !prioritized_line.nil? && board[center_index].is_a?(Integer)
     center_index
-  else
+  elsif !prioritized_line.nil?
     prioritized_line.find { |item| board[item].is_a?(Integer) }
   end
 end
