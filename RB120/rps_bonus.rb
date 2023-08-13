@@ -119,7 +119,7 @@ class Human < Player
     loop do
       puts '=> Please, choose (r)ock, (p)aper, (l)izard, (sp)ock or (s)cissors:'
       choice = gets.chomp.downcase
-      choice = identify_move(choice) if choice.size == 1
+      choice = identify_move(choice) if choice.size <= 2
       break if Move::VALUES.include?(choice)
 
       puts 'Sorry, invalid choice.'
